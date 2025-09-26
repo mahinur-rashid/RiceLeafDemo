@@ -41,6 +41,13 @@ POST an image to `/api/predict`:
 curl -X POST -F "file=@path/to/image.jpg" http://127.0.0.1:5000/api/predict
 ```
 
+
+## Frontend Samples
+
+| Upload Page | Prediction: Healthy | Prediction: Leaf Scald | Prediction: Rice Stripes |
+|-------------|---------------------|------------------------|--------------------------|
+| ![Upload](assets/frontend_1.png) | ![Healthy](assets/frontend_2.png) | ![Leaf Scald](assets/frontend_3.png) | ![Rice Stripes](assets/frontend_4.png) |
+
 ## Project Structure
 
 ```
@@ -55,6 +62,11 @@ RiceLeafDemo/
 ├── templates/
 │   ├── index.html
 │   └── result.html
+├── assets/
+│   ├── frontend_1.png
+│   ├── frontend_2.png
+│   ├── frontend_3.png
+│   └── frontend_4.png
 └── README.md
 ```
 
