@@ -51,6 +51,10 @@ def index():
 def uploaded_file(filename):
     return url_for('static', filename='uploads/' + filename)
 
+@app.route('/demo')
+def mobile_demo():
+    return render_template('mobile_demo.html')
+
 # API endpoint for programmatic access
 @app.route('/api/predict', methods=['POST'])
 def api_predict():
@@ -67,4 +71,4 @@ def api_predict():
         return {'error': 'Allowed file types are png, jpg, jpeg'}, 400
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

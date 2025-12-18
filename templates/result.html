@@ -6,22 +6,413 @@
     <title>Prediction Result</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
-        body { background: #f8fafc; }
-        .container { max-width: 500px; margin-top: 60px; }
-        .card { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .img-preview { max-width: 100%; border-radius: 8px; margin-bottom: 20px; }
+        body { 
+            background: #f8fafc; 
+            margin: 0;
+            padding: 0;
+        }
+        .container { 
+            max-width: 100%; 
+            margin: 0;
+            padding: 10px;
+        }
+        .result-card { 
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .img-preview { 
+            max-width: 100%; 
+            border-radius: 8px; 
+            margin-bottom: 10px; 
+        }
+        h2 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        h4 {
+            font-size: 16px;
+            margin-top: 10px;
+            margin-bottom: 8px;
+        }
+        h5 {
+            font-size: 14px;
+        }
+        .alert {
+            font-size: 15px;
+            padding: 10px;
+            margin-bottom: 8px;
+        }
+        .btn {
+            font-size: 14px;
+            padding: 8px 16px;
+        }
+        
+        /* Chatbox styles */
+        .chat-container {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .chat-header {
+            background: #198754;
+            color: white;
+            padding: 12px;
+            font-weight: bold;
+            font-size: 15px;
+        }
+        .chat-messages {
+            height: 300px;
+            overflow-y: auto;
+            padding: 12px;
+            background: white;
+        }
+        .message {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+        }
+        .message.user {
+            justify-content: flex-end;
+        }
+        .message-bubble {
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 15px;
+            word-wrap: break-word;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        .message.user .message-bubble {
+            background: #007bff;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .message.bot .message-bubble {
+            background: #e9ecef;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+        .chat-input-container {
+            display: flex;
+            padding: 10px;
+            background: #f8f9fa;
+            border-top: 1px solid #ddd;
+            gap: 8px;
+        }
+        .chat-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+        .chat-send-btn {
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .typing-indicator {
+            display: none;
+            padding: 8px 12px;
+            background: #e9ecef;
+            border-radius: 15px;
+            max-width: 60px;
+        }
+        .typing-indicator span {
+            height: 6px;
+            width: 6px;
+            background: #666;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 3px;
+            animation: typing 1.4s infinite;
+        }
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-8px); }
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="card p-4 text-center">
-        <h2 class="mb-4">🌾 Prediction Result</h2>
+    <div class="result-card text-center">
+        <h2 class="text-center">🌾 Prediction Result</h2>
         <img src="{{ url_for('static', filename='uploads/' + filename) }}" class="img-preview" alt="Uploaded Image">
-        <h4 class="mt-3">Predicted Class:</h4>
+        <h4 class="mt-2">Predicted Class:</h4>
         <div class="alert alert-info"><b>{{ pred_class }}</b></div>
         <h5>Confidence: {{ '%.2f'|format(confidence * 100) }}%</h5>
-        <a href="/" class="btn btn-secondary mt-3">Try Another Image</a>
+        <a href="/" class="btn btn-secondary mt-2">Try Another Image</a>
+    </div>
+    
+    <div class="chat-container">
+        <div class="chat-header">
+            💬 Ask About This Disease
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="message-bubble">
+                    Hello! I detected <strong>{{ pred_class }}</strong> in your rice leaf. How can I help you? You can ask me for suggestions or more information about this disease.
+                </div>
+            </div>
+        </div>
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+            <button class="btn btn-success chat-send-btn" onclick="sendMessage()">➤</button>
+        </div>
     </div>
 </div>
+
+<script>
+const diseaseInfo = {
+    'Tungro': {
+        description: 'Rice Tungro is a viral disease caused by two viruses: Rice tungro bacilliform virus (RTBV) and Rice tungro spherical virus (RTSV). It is transmitted by leafhoppers and causes yellowing and stunting of plants.',
+        suggestions: [
+            '🌱 <strong>Plant Resistant Varieties:</strong> Use tungro-resistant rice varieties like IR74, IR64, IR72, Utri Merah, and TKM6. These varieties show strong resistance to the virus.',
+            '🦗 <strong>Control Leafhoppers:</strong> The disease is spread by green leafhoppers (Nephotettix virescens). Apply neonicotinoid insecticides (imidacloprid 200 SL) or use biological control with predatory spiders and mirid bugs.',
+            '🔄 <strong>Crop Rotation:</strong> Avoid continuous rice cropping. Rotate with non-rice crops like legumes or vegetables for at least one season to break the disease cycle.',
+            '🗓️ <strong>Synchronous Planting:</strong> Coordinate with neighboring farmers to plant all rice in the area within 2-3 weeks to avoid continuous presence of the virus and vectors.',
+            '🧹 <strong>Remove Infected Plants:</strong> Immediately rogue out and destroy infected plants during the first 30 days after transplanting to prevent spread to healthy plants.',
+            '💧 <strong>Proper Water Management:</strong> Maintain 2-5 cm water depth. Drain fields periodically as leafhoppers prefer continuously flooded conditions.',
+            '🌾 <strong>Use Healthy Seedlings:</strong> Always start with certified disease-free seeds. Raise seedlings in insect-proof nurseries to prevent early infection.',
+            '👨‍🌾 <strong>Regular Monitoring:</strong> Inspect fields twice weekly during the first 45 days. Look for yellowing, stunting, and reduced tillering as early warning signs.',
+            '🚫 <strong>Avoid Ratoon Cropping:</strong> Do not allow ratoon (second crop from same roots) as it serves as a reservoir for the virus.',
+            '🌿 <strong>Weed Control:</strong> Remove grassy weeds around fields as they can harbor leafhoppers and serve as alternate hosts for the virus.'
+        ]
+    },
+    'Bacterial Leaf Blight': {
+        description: 'Bacterial Leaf Blight (BLB) is caused by Xanthomonas oryzae pv. oryzae. It causes water-soaked lesions that turn yellow-white, leading to leaf wilting and significant yield losses.',
+        suggestions: [
+            '🌱 <strong>Use Resistant Varieties:</strong> Plant BLB-resistant varieties like IRBB60, IRBB66, PSBRc82, or local resistant cultivars available in your region.',
+            '🌾 <strong>Seed Treatment:</strong> Treat seeds with bleaching powder solution (100g per liter) for 12 hours, or use streptomycin sulfate (0.025%) for 30 minutes before sowing.',
+            '💧 <strong>Water Management:</strong> Avoid excess nitrogen and maintain proper drainage. Don\'t over-irrigate, especially during vulnerable growth stages.',
+            '🧹 <strong>Field Sanitation:</strong> Remove and burn crop residues immediately after harvest. Keep field bunds clean and weed-free to eliminate bacterial reservoirs.',
+            '🔄 <strong>Crop Rotation:</strong> Practice 2-3 season rotation with non-host crops like legumes, vegetables, or allow fallow period with flooding.',
+            '⚗️ <strong>Chemical Control:</strong> Apply copper-based bactericides (copper hydroxide or copper oxychloride at 2g/L) or antibiotics like streptocycline (0.3g/L) at 7-day intervals if disease appears.',
+            '� <strong>Balanced Fertilization:</strong> Avoid excessive nitrogen. Use split applications and supplement with potassium and silica to strengthen plant resistance.',
+            '🚫 <strong>Avoid Injury:</strong> Prevent mechanical injury during transplanting and field operations as wounds provide entry points for bacteria.',
+            '📅 <strong>Adjust Planting Time:</strong> Avoid planting during peak rainfall or typhoon season when bacterial spread is favored by wind-blown rain.',
+            '👨‍🌾 <strong>Monitor and Scout:</strong> Check water-soaked lesions on leaf tips and margins early morning. Remove infected plants in nursery before transplanting.'
+        ]
+    },
+    'Brown Spot': {
+        description: 'Brown Spot is a fungal disease caused by Bipolaris oryzae (formerly Helminthosporium oryzae). It causes oval brown lesions with gray centers on leaves, reducing photosynthesis and grain quality.',
+        suggestions: [
+            '🌱 <strong>Use Healthy Seeds:</strong> Use certified disease-free seeds. Avoid seeds from infected crops. Conduct seed health testing before planting.',
+            '⚗️ <strong>Seed Treatment:</strong> Treat seeds with carbendazim (2g/kg seed) or thiram (3g/kg seed) before sowing to eliminate seed-borne inoculum.',
+            '🌾 <strong>Foliar Fungicides:</strong> Apply mancozeb (2.5g/L), edifenphos (1ml/L), or tricyclazole (0.6g/L) at 10-day intervals starting from tillering stage.',
+            '💧 <strong>Improve Soil Health:</strong> Apply organic matter and maintain proper soil fertility. Brown spot is severe in nutrient-deficient soils, especially those low in silica.',
+            '🧪 <strong>Balanced Fertilization:</strong> Apply balanced NPK fertilizers. Deficiency of nitrogen, potassium, silica, iron, or zinc increases susceptibility. Consider foliar zinc spray (0.5% ZnSO4).',
+            '💧 <strong>Water Management:</strong> Maintain adequate water levels. Avoid moisture stress as it increases disease severity. Ensure good drainage to prevent prolonged leaf wetness.',
+            '🧹 <strong>Field Sanitation:</strong> Remove and destroy stubble and straw after harvest. Plow deeply to bury infected debris and reduce inoculum for next season.',
+            '🔄 <strong>Crop Rotation:</strong> Rotate with non-susceptible crops for 1-2 seasons to reduce fungal spore buildup in soil and crop residues.',
+            '🌱 <strong>Plant Resistant Varieties:</strong> Choose varieties with moderate resistance like IR36, IR64, or locally adapted resistant cultivars.',
+            '📅 <strong>Optimal Planting:</strong> Avoid very early or very late planting. Follow recommended planting dates to minimize disease pressure from environmental conditions.',
+            '🌿 <strong>Proper Spacing:</strong> Maintain recommended plant spacing to ensure good air circulation and reduce humidity in the canopy, which favors fungal growth.'
+        ]
+    },
+    'Leaf Smut': {
+        description: 'Leaf Smut is a fungal disease caused by Entyloma oryzae, characterized by small black angular spots on leaves. It\'s generally a minor disease but can affect photosynthesis.',
+        suggestions: [
+            '🌱 <strong>Use Resistant Varieties:</strong> Plant varieties with genetic resistance to leaf smut when available in your region.',
+            '🌾 <strong>Seed Treatment:</strong> Treat seeds with systemic fungicides like carboxin or carbendazim (2g/kg seed) before planting.',
+            '⚗️ <strong>Foliar Spray:</strong> If needed, apply copper-based fungicides (copper oxychloride 2.5g/L) or mancozeb (2g/L) at early infection stage.',
+            '💧 <strong>Reduce Humidity:</strong> Ensure proper field drainage and plant spacing to reduce humidity, which favors smut development.',
+            '🧹 <strong>Remove Infected Material:</strong> Collect and destroy severely infected leaves to reduce spore spread in the field.',
+            '🌿 <strong>Balanced Nutrition:</strong> Maintain adequate potassium and avoid excessive nitrogen, which makes plants more susceptible.',
+            '🔄 <strong>Crop Rotation:</strong> Practice rotation with other crops to break the disease cycle and reduce soil-borne inoculum.'
+        ]
+    },
+    'Bacterial Leaf Streak': {
+        description: 'Bacterial Leaf Streak is caused by Xanthomonas oryzae pv. oryzicola. It produces narrow, water-soaked streaks between leaf veins that turn translucent yellow.',
+        suggestions: [
+            '🌱 <strong>Resistant Varieties:</strong> Use varieties with known resistance to bacterial leaf streak. Consult local agricultural extension for recommendations.',
+            '🌾 <strong>Seed Sanitation:</strong> Use pathogen-free seeds. Treat seeds with bleach solution (1:1 ratio, 5 minutes) then rinse thoroughly before planting.',
+            '⚗️ <strong>Copper Bactericides:</strong> Apply copper hydroxide (2-3g/L) or copper oxychloride preventively before disease onset, especially during rainy season.',
+            '💧 <strong>Water Management:</strong> Avoid overhead irrigation. Use controlled flooding to minimize splash dispersal of bacteria from infected to healthy plants.',
+            '🧹 <strong>Sanitation Practices:</strong> Remove volunteer rice plants and weeds. Burn infected plant debris after harvest to eliminate bacterial reservoirs.',
+            '🌿 <strong>Reduce Nitrogen:</strong> Avoid excessive nitrogen fertilization which promotes lush growth that\'s more susceptible to infection.',
+            '� <strong>Minimize Injury:</strong> Prevent leaf injuries from insects, wind, or mechanical damage as bacteria enter through wounds and natural openings.',
+            '📅 <strong>Planting Time:</strong> Adjust planting dates to avoid peak rainy seasons when bacterial diseases spread rapidly through rain splash.'
+        ]
+    },
+    'Healthy': {
+        description: 'Your rice plant appears healthy with no visible disease symptoms. Maintaining good agricultural practices will keep it disease-free.',
+        suggestions: [
+            '✅ <strong>Continue Good Practices:</strong> Keep following your current nutrient management, irrigation, and pest control practices.',
+            '👨‍🌾 <strong>Regular Monitoring:</strong> Continue to inspect your fields weekly for any early signs of pests or diseases.',
+            '💧 <strong>Proper Water Management:</strong> Maintain optimal water depth (2-5 cm) and ensure good drainage to prevent disease development.',
+            '🌾 <strong>Balanced Fertilization:</strong> Continue balanced NPK application with adequate micronutrients, especially zinc and silica for plant health.',
+            '🧹 <strong>Field Hygiene:</strong> Keep field bunds weed-free and remove any volunteer plants that could harbor pests or diseases.',
+            '� <strong>Preventive Care:</strong> Apply recommended preventive sprays during critical growth stages if disease pressure is high in your area.',
+            '📚 <strong>Stay Informed:</strong> Keep updated on disease forecasts and pest warnings from local agricultural extension services.',
+            '🌱 <strong>Quality Inputs:</strong> Continue using certified seeds and quality fertilizers for next planting season.'
+        ]
+    }
+};
+
+function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    
+    if (message === '') return;
+    
+    // Add user message
+    addMessage(message, 'user');
+    input.value = '';
+    
+    // Show typing indicator
+    showTypingIndicator();
+    
+    // Simulate bot response after a delay
+    setTimeout(() => {
+        hideTypingIndicator();
+        handleBotResponse(message);
+    }, 1000);
+}
+
+function handleKeyPress(event) {
+    if (event.key === 'Enter') {
+        sendMessage();
+    }
+}
+
+function addMessage(text, sender) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${sender}`;
+    
+    const bubbleDiv = document.createElement('div');
+    bubbleDiv.className = 'message-bubble';
+    bubbleDiv.innerHTML = text;
+    
+    messageDiv.appendChild(bubbleDiv);
+    chatMessages.appendChild(messageDiv);
+    
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function showTypingIndicator() {
+    const chatMessages = document.getElementById('chatMessages');
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'message bot';
+    typingDiv.id = 'typingIndicator';
+    
+    const bubbleDiv = document.createElement('div');
+    bubbleDiv.className = 'typing-indicator';
+    bubbleDiv.style.display = 'block';
+    bubbleDiv.innerHTML = '<span></span><span></span><span></span>';
+    
+    typingDiv.appendChild(bubbleDiv);
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function hideTypingIndicator() {
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (typingIndicator) {
+        typingIndicator.remove();
+    }
+}
+
+function handleBotResponse(userMessage) {
+    const disease = '{{ pred_class }}';
+    const lowerMessage = userMessage.toLowerCase();
+    
+    let response = '';
+    
+    // Check for suggestion requests
+    if (lowerMessage.includes('suggestion') || lowerMessage.includes('help') || 
+        lowerMessage.includes('treatment') || lowerMessage.includes('cure') ||
+        lowerMessage.includes('what to do') || lowerMessage.includes('what should') ||
+        lowerMessage.includes('how to treat') || lowerMessage.includes('manage')) {
+        
+        if (diseaseInfo[disease] && diseaseInfo[disease].suggestions) {
+            response = `<strong>Here are suggestions for managing ${disease}:</strong><br><br>`;
+            response += diseaseInfo[disease].suggestions.join('<br><br>');
+        } else {
+            response = `I have general recommendations for rice disease management:<br><br>
+                        🌱 Use disease-resistant varieties<br>
+                        💧 Practice proper water management<br>
+                        🧹 Maintain field sanitation<br>
+                        🌾 Apply balanced fertilization<br>
+                        👨‍🌾 Monitor fields regularly<br><br>
+                        For specific treatment, please consult your local agricultural extension officer.`;
+        }
+    }
+    // Check for prevention
+    else if (lowerMessage.includes('prevent') || lowerMessage.includes('avoid') || 
+             lowerMessage.includes('stop') || lowerMessage.includes('control')) {
+        
+        if (diseaseInfo[disease] && diseaseInfo[disease].suggestions) {
+            response = `<strong>Prevention strategies for ${disease}:</strong><br><br>`;
+            // Show first 5 suggestions for prevention
+            response += diseaseInfo[disease].suggestions.slice(0, 5).join('<br><br>');
+            response += '<br><br>Type "give me suggestions" for complete management strategies.';
+        } else {
+            response = 'Prevention is key! Use resistant varieties, maintain proper field hygiene, and monitor your crops regularly. Type "give me suggestions" for detailed management strategies.';
+        }
+    }
+    // Check for information about the disease
+    else if (lowerMessage.includes('what is') || lowerMessage.includes('tell me about') || 
+             lowerMessage.includes('information') || lowerMessage.includes('describe') ||
+             lowerMessage.includes('about')) {
+        
+        if (diseaseInfo[disease] && diseaseInfo[disease].description) {
+            response = diseaseInfo[disease].description;
+            response += '<br><br>Would you like suggestions for managing this disease?';
+        } else {
+            response = `${disease} is a rice plant condition that requires proper management. Would you like suggestions for treatment?`;
+        }
+    }
+    // Check for symptoms
+    else if (lowerMessage.includes('symptom') || lowerMessage.includes('sign') || 
+             lowerMessage.includes('look like')) {
+        response = 'Common symptoms to look for include leaf discoloration, spots or lesions, stunted growth, wilting, and reduced tillering. Would you like suggestions for managing this disease?';
+    }
+    // Greetings
+    else if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || 
+             lowerMessage.includes('hey')) {
+        response = `Hello! I'm here to help you with ${disease}. You can ask me for suggestions, prevention methods, or more information about this condition.`;
+    }
+    // Thanks
+    else if (lowerMessage.includes('thank') || lowerMessage.includes('thanks')) {
+        response = 'You\'re welcome! Feel free to ask if you need more information. Good luck with your rice crop! 🌾';
+    }
+    // Default response
+    else {
+        response = `I can help you with information about <strong>${disease}</strong>. You can ask me:<br><br>
+                    • "Give me suggestions"<br>
+                    • "How to prevent it?"<br>
+                    • "What is ${disease}?"<br>
+                    • "What are the symptoms?"<br>
+                    • "How to treat this?"`;
+    }
+    
+    addMessage(response, 'bot');
+}
+
+// Initial message setup
+document.addEventListener('DOMContentLoaded', function() {
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+});
+</script>
 </body>
 </html>

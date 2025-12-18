@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rice Disease Classifier - Mobile Demo</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        
+        .demo-container {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .phone-mockup {
+            width: 375px;
+            height: 812px;
+            background: #1a1a1a;
+            border-radius: 50px;
+            padding: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        
+        .phone-notch {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 30px;
+            background: #1a1a1a;
+            border-radius: 0 0 20px 20px;
+            z-index: 10;
+        }
+        
+        .phone-speaker {
+            position: absolute;
+            top: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 6px;
+            background: #0a0a0a;
+            border-radius: 3px;
+        }
+        
+        .phone-camera {
+            position: absolute;
+            top: 20px;
+            right: 80px;
+            width: 12px;
+            height: 12px;
+            background: #0a0a0a;
+            border-radius: 50%;
+            border: 2px solid #1a1a1a;
+        }
+        
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 40px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .phone-content {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .phone-content::-webkit-scrollbar {
+            width: 3px;
+        }
+        
+        .phone-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .info-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .info-panel h1 {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .info-panel p {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 10px 0;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .feature-list li::before {
+            content: "✓";
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: #198754;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .btn-demo {
+            background: #198754;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        
+        .btn-demo:hover {
+            background: #157347;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(25, 135, 84, 0.3);
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .phone-mockup {
+                width: 320px;
+                height: 693px;
+                border-radius: 40px;
+                padding: 12px;
+            }
+            
+            .phone-screen {
+                border-radius: 32px;
+            }
+            
+            .info-panel {
+                max-width: 320px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="info-panel">
+            <h1>🌾 Rice Disease Classifier</h1>
+            <p>AI-powered mobile app for instant rice disease detection and treatment recommendations.</p>
+            
+            <ul class="feature-list">
+                <li>Upload rice leaf images</li>
+                <li>Instant AI disease detection</li>
+                <li>Expert treatment suggestions</li>
+                <li>Interactive chat support</li>
+                <li>Prevention techniques</li>
+            </ul>
+            
+            <a href="/" class="btn-demo">Try Full Screen Version</a>
+        </div>
+        
+        <div class="phone-mockup">
+            <div class="phone-notch"></div>
+            <div class="phone-speaker"></div>
+            <div class="phone-camera"></div>
+            
+            <div class="phone-screen">
+                <div class="phone-content">
+                    <iframe src="/" title="Rice Disease Classifier"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
